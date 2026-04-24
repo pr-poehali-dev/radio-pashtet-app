@@ -6,11 +6,13 @@ import BottomNav from "@/components/radio/BottomNav";
 import MiniPlayer from "@/components/radio/MiniPlayer";
 
 export type Page = "live" | "schedule" | "account";
+export type NowPlaying = { title: string; artist: string } | null;
 
 const Index = () => {
   const [activePage, setActivePage] = useState<Page>("live");
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(75);
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>(null);
 
   return (
     <div className="min-h-screen bg-background gradient-mesh relative overflow-hidden">
@@ -22,14 +24,25 @@ const Index = () => {
 
       <div className="relative z-10 pb-40">
         {activePage === "live" && (
-          <LivePage isPlaying={isPlaying} setIsPlaying={setIsPlaying} volume={volume} setVolume={setVolume} />
+          <LivePage
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+            volume={volume}
+            setVolume={setVolume}
+            onNowPlaying={setNowPlaying}
+          />
         )}
         {activePage === "schedule" && <SchedulePage />}
         {activePage === "account" && <AccountPage />}
       </div>
 
       {activePage !== "live" && (
-        <MiniPlayer isPlaying={isPlaying} setIsPlaying={setIsPlaying} onOpen={() => setActivePage("live")} />
+        <MiniPlayer
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          onOpen={() => setActivePage("live")}
+          nowPlaying={nowPlaying}
+        />
       )}
 
       <BottomNav activePage={activePage} setActivePage={setActivePage} />

@@ -4,9 +4,10 @@ interface MiniPlayerProps {
   isPlaying: boolean;
   setIsPlaying: (v: boolean) => void;
   onOpen: () => void;
+  nowPlaying?: { title: string; artist: string } | null;
 }
 
-const MiniPlayer = ({ isPlaying, setIsPlaying, onOpen }: MiniPlayerProps) => {
+const MiniPlayer = ({ isPlaying, setIsPlaying, onOpen, nowPlaying }: MiniPlayerProps) => {
   return (
     <div className="fixed bottom-24 left-4 right-4 z-40 mx-auto max-w-sm animate-fade-up">
       <div
@@ -21,8 +22,12 @@ const MiniPlayer = ({ isPlaying, setIsPlaying, onOpen }: MiniPlayerProps) => {
 
         {/* Info */}
         <button onClick={onOpen} className="flex-1 min-w-0 text-left">
-          <p className="font-body text-sm font-medium text-foreground truncate">Волна FM — 102.3 МГц</p>
-          <p className="font-body text-xs text-muted-foreground truncate">Утреннее шоу · Алексей Морозов</p>
+          <p className="font-body text-sm font-medium text-foreground truncate">
+            {nowPlaying ? nowPlaying.title : "Волна FM — 102.3 МГц"}
+          </p>
+          <p className="font-body text-xs text-muted-foreground truncate">
+            {nowPlaying?.artist || "Прямой эфир"}
+          </p>
         </button>
 
         {/* Equalizer or pause indicator */}

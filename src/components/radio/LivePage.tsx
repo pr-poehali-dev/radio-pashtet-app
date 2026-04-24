@@ -8,6 +8,7 @@ interface LivePageProps {
   setIsPlaying: (v: boolean) => void;
   volume: number;
   setVolume: (v: number) => void;
+  onNowPlaying?: (v: { title: string; artist: string } | null) => void;
 }
 
 const RADIO_STATIONS = [
@@ -23,12 +24,46 @@ const RECENT_TRACKS = [
   { title: "Нить Ариадны", artist: "Земфира", time: "21:32" },
 ];
 
-const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume }: LivePageProps) => {
+const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume, onNowPlaying }: LivePageProps) => {
   const [activeStation, setActiveStation] = useState(0);
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [nowPlaying, setNowPlaying] = useState<{ title: string; artist: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const metaIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const station = RADIO_STATIONS[activeStation];
+
+  const updateNowPlaying = (val: { title: string; artist: string } | null) => {
+    setNowPlaying(val);
+    onNowPlaying?.(val);
+  };
+
+  const fetchNowPlaying = async () => {
+    try {
+      const res = await fetch(`https://volnorez.com/ajax/nowplaying?station=radio-pashtet&_=${Date.now()}`);
+      const text = await res.text();
+      if (text && text.trim()) {
+        try {
+          const data = JSON.parse(text);
+          const raw: string = data.title || data.track || data.song || data.current_song || "";
+          if (raw) {
+            const parts = raw.split(" - ");
+            updateNowPlaying(parts.length >= 2
+              ? { artist: parts[0].trim(), title: parts.slice(1).join(" - ").trim() }
+              : { artist: "", title: raw.trim() }
+            );
+          }
+        } catch {
+          if (text.includes(" - ")) {
+            const parts = text.split(" - ");
+            updateNowPlaying({ artist: parts[0].trim(), title: parts.slice(1).join(" - ").trim() });
+          }
+        }
+      }
+    } catch {
+      // API недоступен — используем ICY метаданные
+    }
+  };
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -39,7 +74,23 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume }: LivePageProps)
     audio.onwaiting = () => setLoading(true);
     audio.onplaying = () => setLoading(false);
     audio.onerror = () => setLoading(false);
+
+    // Слушаем ICY метаданные через нативный API
+    const handleMeta = () => {
+      // @ts-expect-error нестандартный API
+      const track = audio?.mozGetMetadata?.();
+      if (track?.StreamTitle) {
+        const parts = (track.StreamTitle as string).split(" - ");
+        updateNowPlaying(parts.length >= 2
+          ? { artist: parts[0].trim(), title: parts.slice(1).join(" - ").trim() }
+          : { artist: "", title: track.StreamTitle }
+        );
+      }
+    };
+    audio.addEventListener("mozaudiometadata", handleMeta);
+
     return () => {
+      audio.removeEventListener("mozaudiometadata", handleMeta);
       audio.pause();
       audio.src = "";
     };
@@ -52,11 +103,17 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume }: LivePageProps)
       setLoading(true);
       audio.src = station.stream;
       audio.play().catch(() => setLoading(false));
+      fetchNowPlaying();
+      metaIntervalRef.current = setInterval(fetchNowPlaying, 15000);
     } else {
       audio.pause();
       audio.src = "";
       setLoading(false);
+      if (metaIntervalRef.current) clearInterval(metaIntervalRef.current);
     }
+    return () => {
+      if (metaIntervalRef.current) clearInterval(metaIntervalRef.current);
+    };
   }, [isPlaying, activeStation]);
 
   useEffect(() => {
@@ -117,8 +174,19 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume }: LivePageProps)
               </button>
             </div>
             <div className="mt-3">
-              <p className="font-body text-sm font-medium text-foreground">{station.show}</p>
-              <p className="font-body text-xs text-muted-foreground">Ведущий: {station.host}</p>
+              {nowPlaying ? (
+                <div className="animate-fade-up">
+                  <p className="font-body text-sm font-medium text-foreground truncate">{nowPlaying.title}</p>
+                  {nowPlaying.artist && (
+                    <p className="font-body text-xs text-muted-foreground truncate">{nowPlaying.artist}</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p className="font-body text-sm font-medium text-foreground">{station.show}</p>
+                  <p className="font-body text-xs text-muted-foreground">Ведущий: {station.host}</p>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-3 mt-3">
               <div className="flex items-center gap-1">
