@@ -12,9 +12,7 @@ interface LivePageProps {
 }
 
 const RADIO_STATIONS = [
-  { id: 1, name: "Радио Паштет", freq: "102.3", show: "Прямой эфир", host: "Радио Паштет", listeners: "14.2K", genre: "Поп / Хиты", stream: STREAM_URL },
-  { id: 2, name: "Радио Паштет", freq: "98.7", show: "Прямой эфир", host: "Радио Паштет", listeners: "8.9K", genre: "Рок / Металл", stream: STREAM_URL },
-  { id: 3, name: "Радио Паштет", freq: "105.1", show: "Прямой эфир", host: "Радио Паштет", listeners: "5.1K", genre: "Джаз / Блюз", stream: STREAM_URL },
+  { id: 1, name: "Радио Паштет", show: "Прямой эфир", listeners: "14.2K", genre: "Интернет-радио", stream: STREAM_URL },
 ];
 
 const RECENT_TRACKS = [
@@ -164,7 +162,6 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume, onNowPlaying }: 
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 className="font-display text-2xl font-semibold neon-orange mb-1">{station.name}</h2>
-                <p className="font-body text-sm text-muted-foreground">{station.freq} МГц</p>
               </div>
               <button
                 onClick={() => setLiked(!liked)}
@@ -255,27 +252,6 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume, onNowPlaying }: 
           </div>
           <Icon name="Volume2" size={16} className="text-muted-foreground flex-shrink-0" />
           <span className="text-xs font-body text-muted-foreground w-8 text-right">{volume}%</span>
-        </div>
-      </div>
-
-      {/* Station switcher */}
-      <div className="mb-6 animate-fade-up" style={{ animationDelay: "0.2s" }}>
-        <h3 className="font-display text-lg font-medium text-foreground mb-3 uppercase tracking-wide">Станции</h3>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {RADIO_STATIONS.map((s, i) => (
-            <button
-              key={s.id}
-              onClick={() => setActiveStation(i)}
-              className={`flex-shrink-0 px-4 py-3 rounded-2xl transition-all text-left ${
-                activeStation === i
-                  ? "bg-[#FF6B2B] text-white glow-orange"
-                  : "glass text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <p className="font-display text-sm font-semibold">{s.name}</p>
-              <p className="font-body text-xs opacity-80">{s.freq} МГц</p>
-            </button>
-          ))}
         </div>
       </div>
 
