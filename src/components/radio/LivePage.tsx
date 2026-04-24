@@ -12,15 +12,9 @@ interface LivePageProps {
 }
 
 const RADIO_STATIONS = [
-  { id: 1, name: "Радио Паштет", show: "Прямой эфир", listeners: "14.2K", genre: "Интернет-радио", stream: STREAM_URL },
+  { id: 1, name: "Радио Паштет", show: "Прямой эфир", host: "Егор Грачев", listeners: "14.2K", genre: "Интернет-радио", stream: STREAM_URL },
 ];
 
-const RECENT_TRACKS = [
-  { title: "Городская ночь", artist: "Сплин", time: "21:47" },
-  { title: "Подожди", artist: "МУККА", time: "21:43" },
-  { title: "Электрические сны", artist: "Би-2", time: "21:38" },
-  { title: "Нить Ариадны", artist: "Земфира", time: "21:32" },
-];
 
 const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume, onNowPlaying }: LivePageProps) => {
   const [activeStation, setActiveStation] = useState(0);
@@ -147,8 +141,8 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume, onNowPlaying }: 
               style={{ animationDuration: "12s" }}
             >
               <img
-                src="https://cdn.poehali.dev/projects/67d51cef-c69a-4ce8-9708-d01ace2cf2f2/files/44c5900b-4cae-41e7-a5ce-b9a246654b77.jpg"
-                alt="Radio"
+                src="https://cdn.poehali.dev/projects/67d51cef-c69a-4ce8-9708-d01ace2cf2f2/bucket/9f6ae5b4-abee-4222-b9b4-261ea0186f6a.jpg"
+                alt="Радио Паштет"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -255,24 +249,7 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume, onNowPlaying }: 
         </div>
       </div>
 
-      {/* Recently played */}
-      <div className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
-        <h3 className="font-display text-lg font-medium text-foreground mb-3 uppercase tracking-wide">Недавно в эфире</h3>
-        <div className="space-y-2">
-          {RECENT_TRACKS.map((track, i) => (
-            <div key={i} className="glass rounded-2xl px-4 py-3 flex items-center gap-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B2B]/20 to-[#8B5CF6]/20 flex items-center justify-center flex-shrink-0">
-                <Icon name="Music" size={14} className="text-[#FF6B2B]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-body text-sm font-medium text-foreground truncate">{track.title}</p>
-                <p className="font-body text-xs text-muted-foreground">{track.artist}</p>
-              </div>
-              <span className="font-body text-xs text-muted-foreground flex-shrink-0">{track.time}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+
     </div>
   );
 };
