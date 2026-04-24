@@ -12,9 +12,9 @@ interface LivePageProps {
 }
 
 const RADIO_STATIONS = [
-  { id: 1, name: "Волна FM", freq: "102.3", show: "Утреннее шоу", host: "Алексей Морозов", listeners: "14.2K", genre: "Поп / Хиты", stream: STREAM_URL },
-  { id: 2, name: "Рок Волна", freq: "98.7", show: "Тяжёлый вечер", host: "Дмитрий Кузнецов", listeners: "8.9K", genre: "Рок / Металл", stream: STREAM_URL },
-  { id: 3, name: "Jazz FM", freq: "105.1", show: "Jazz Lounge", host: "Ирина Блюзова", listeners: "5.1K", genre: "Джаз / Блюз", stream: STREAM_URL },
+  { id: 1, name: "Радио Паштет", freq: "102.3", show: "Прямой эфир", host: "Радио Паштет", listeners: "14.2K", genre: "Поп / Хиты", stream: STREAM_URL },
+  { id: 2, name: "Радио Паштет", freq: "98.7", show: "Прямой эфир", host: "Радио Паштет", listeners: "8.9K", genre: "Рок / Металл", stream: STREAM_URL },
+  { id: 3, name: "Радио Паштет", freq: "105.1", show: "Прямой эфир", host: "Радио Паштет", listeners: "5.1K", genre: "Джаз / Блюз", stream: STREAM_URL },
 ];
 
 const RECENT_TRACKS = [

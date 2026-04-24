@@ -23,7 +23,7 @@ const MiniPlayer = ({ isPlaying, setIsPlaying, onOpen, nowPlaying }: MiniPlayerP
         {/* Info */}
         <button onClick={onOpen} className="flex-1 min-w-0 text-left">
           <p className="font-body text-sm font-medium text-foreground truncate">
-            {nowPlaying ? nowPlaying.title : "Волна FM — 102.3 МГц"}
+            {nowPlaying ? nowPlaying.title : "Радио Паштет"}
           </p>
           <p className="font-body text-xs text-muted-foreground truncate">
             {nowPlaying?.artist || "Прямой эфир"}
