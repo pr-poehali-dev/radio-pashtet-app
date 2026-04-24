@@ -1,5 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
+
+const AUTH_URL = "https://functions.poehali.dev/5f6c50f8-d33d-469c-afe7-ea338c239a1d";
+
+async function authApi(action: string, body: object, token?: string) {
+  const res = await fetch(AUTH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "X-Session-Token": token } : {}),
+    },
+    body: JSON.stringify({ action, ...body }),
+  });
+  const data = await res.json();
+  return { ok: res.ok, data };
+}
 
 type Tab = "history" | "favorites" | "notifications";
 type Screen = "login" | "register" | "forgot";
@@ -15,6 +30,7 @@ const AccountPage = ({ onGoLive }: { onGoLive?: () => void }) => {
   const [screen, setScreen] = useState<Screen>("login");
   const [tab, setTab] = useState<Tab>("history");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Форма входа
@@ -33,52 +49,88 @@ const AccountPage = ({ onGoLive }: { onGoLive?: () => void }) => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
 
-  // Данные пользователя после входа
+  // Данные пользователя
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
   // Уведомления
   const [notifications, setNotifications] = useState<Notification[]>([
     { id: 1, text: "Добро пожаловать в Радио Паштет!", time: "Сейчас", read: false },
-    { id: 2, text: "Новый эпизод уже в эфире!", time: "19:01", read: false },
-    { id: 3, text: "Следи за расписанием — скоро новые передачи", time: "Вчера", read: true },
+    { id: 2, text: "Следи за расписанием — скоро новые передачи", time: "Вчера", read: true },
   ]);
 
-  const handleLogin = () => {
-    if (!email.trim()) { setLoginError("Введите email"); return; }
-    if (!password.trim()) { setLoginError("Введите пароль"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setLoginError("Некорректный email"); return; }
-    setLoginError("");
-    const name = email.split("@")[0];
-    setUserName(name.charAt(0).toUpperCase() + name.slice(1));
-    setUserEmail(email);
+  // Восстановить сессию при загрузке
+  useEffect(() => {
+    const token = localStorage.getItem("rp_token");
+    if (!token) return;
+    authApi("me", {}, token).then(({ ok: success, data }) => {
+      if (success && data.user) {
+        setUserName(data.user.name);
+        setUserEmail(data.user.email);
+        setIsLoggedIn(true);
+      } else {
+        localStorage.removeItem("rp_token");
+      }
+    });
+  }, []);
+
+  const saveSession = (token: string, name: string, userMail: string) => {
+    localStorage.setItem("rp_token", token);
+    setUserName(name);
+    setUserEmail(userMail);
     setIsLoggedIn(true);
   };
 
-  const handleRegister = () => {
+  const handleLogin = async () => {
+    if (!email.trim()) { setLoginError("Введите email"); return; }
+    if (!password.trim()) { setLoginError("Введите пароль"); return; }
+    setLoginError("");
+    setLoading(true);
+    const { ok: success, data } = await authApi("login", { email, password });
+    setLoading(false);
+    if (success) {
+      saveSession(data.token, data.user.name, data.user.email);
+    } else {
+      setLoginError(data.error || "Ошибка входа");
+    }
+  };
+
+  const handleRegister = async () => {
     if (!regName.trim()) { setRegError("Введите имя"); return; }
     if (!regEmail.trim()) { setRegError("Введите email"); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail)) { setRegError("Некорректный email"); return; }
     if (regPassword.length < 6) { setRegError("Пароль минимум 6 символов"); return; }
     setRegError("");
-    setRegSuccess(true);
-    setTimeout(() => {
-      setUserName(regName);
-      setUserEmail(regEmail);
-      setIsLoggedIn(true);
-    }, 1500);
+    setLoading(true);
+    const { ok: success, data } = await authApi("register", { name: regName, email: regEmail, password: regPassword });
+    setLoading(false);
+    if (success) {
+      setRegSuccess(true);
+      setTimeout(() => saveSession(data.token, data.user.name, data.user.email), 1200);
+    } else {
+      setRegError(data.error || "Ошибка регистрации");
+    }
   };
 
   const handleForgot = () => {
-    if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
-      return;
-    }
+    if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) return;
     setForgotSent(true);
   };
 
   const initials = userName
     ? userName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
     : "?";
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem("rp_token");
+    if (token) await authApi("logout", {}, token);
+    localStorage.removeItem("rp_token");
+    setIsLoggedIn(false);
+    setShowLogoutConfirm(false);
+    setEmail("");
+    setPassword("");
+    setScreen("login");
+  };
 
   const markRead = (id: number) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
