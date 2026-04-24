@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
+
+const STREAM_URL = "https://volnorez.com/radio-pashtet/bc";
 
 interface LivePageProps {
   isPlaying: boolean;
@@ -9,9 +11,9 @@ interface LivePageProps {
 }
 
 const RADIO_STATIONS = [
-  { id: 1, name: "Волна FM", freq: "102.3", show: "Утреннее шоу", host: "Алексей Морозов", listeners: "14.2K", genre: "Поп / Хиты" },
-  { id: 2, name: "Рок Волна", freq: "98.7", show: "Тяжёлый вечер", host: "Дмитрий Кузнецов", listeners: "8.9K", genre: "Рок / Металл" },
-  { id: 3, name: "Jazz FM", freq: "105.1", show: "Jazz Lounge", host: "Ирина Блюзова", listeners: "5.1K", genre: "Джаз / Блюз" },
+  { id: 1, name: "Волна FM", freq: "102.3", show: "Утреннее шоу", host: "Алексей Морозов", listeners: "14.2K", genre: "Поп / Хиты", stream: STREAM_URL },
+  { id: 2, name: "Рок Волна", freq: "98.7", show: "Тяжёлый вечер", host: "Дмитрий Кузнецов", listeners: "8.9K", genre: "Рок / Металл", stream: STREAM_URL },
+  { id: 3, name: "Jazz FM", freq: "105.1", show: "Jazz Lounge", host: "Ирина Блюзова", listeners: "5.1K", genre: "Джаз / Блюз", stream: STREAM_URL },
 ];
 
 const RECENT_TRACKS = [
@@ -24,7 +26,44 @@ const RECENT_TRACKS = [
 const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume }: LivePageProps) => {
   const [activeStation, setActiveStation] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const station = RADIO_STATIONS[activeStation];
+
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.preload = "none";
+    }
+    const audio = audioRef.current;
+    audio.onwaiting = () => setLoading(true);
+    audio.onplaying = () => setLoading(false);
+    audio.onerror = () => setLoading(false);
+    return () => {
+      audio.pause();
+      audio.src = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      setLoading(true);
+      audio.src = station.stream;
+      audio.play().catch(() => setLoading(false));
+    } else {
+      audio.pause();
+      audio.src = "";
+      setLoading(false);
+    }
+  }, [isPlaying, activeStation]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
 
   return (
     <div className="min-h-screen px-4 pt-8">
@@ -117,11 +156,13 @@ const LivePage = ({ isPlaying, setIsPlaying, volume, setVolume }: LivePageProps)
           <button
             onClick={() => setIsPlaying(!isPlaying)}
             className="w-16 h-16 rounded-full flex items-center justify-center transition-all hover:scale-105 animate-glow-pulse"
-            style={{
-              background: "linear-gradient(135deg, #FF6B2B, #E85D20)",
-            }}
+            style={{ background: "linear-gradient(135deg, #FF6B2B, #E85D20)" }}
           >
-            <Icon name={isPlaying ? "Pause" : "Play"} size={28} className="text-white" />
+            {loading ? (
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Icon name={isPlaying ? "Pause" : "Play"} size={28} className="text-white" />
+            )}
           </button>
 
           <button className="p-3 glass rounded-2xl hover:scale-105 transition-all">
