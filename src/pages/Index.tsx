@@ -33,7 +33,7 @@ const Index = () => {
           />
         )}
         {activePage === "schedule" && <SchedulePage />}
-        {activePage === "account" && <AccountPage />}
+        {activePage === "account" && <AccountPage onGoLive={() => setActivePage("live")} />}
       </div>
 
       {activePage !== "live" && (
